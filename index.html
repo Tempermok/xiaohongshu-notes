@@ -1,0 +1,232 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小紅書筆記自動生成器</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--red:#ff2442;--pink:#fff0f3;--bg:#faf5f6;--card:#fff;--text:#333;--gray:#999;--border:#f0e0e4;--shadow:0 2px 16px rgba(255,36,66,.08)}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.app{max-width:960px;margin:0 auto;padding:20px}
+.header{text-align:center;padding:30px 0 20px}
+.header h1{font-size:28px;color:var(--red);margin-bottom:6px}
+.header p{color:var(--gray);font-size:14px}
+.gen-card{background:var(--card);border-radius:16px;padding:28px;box-shadow:var(--shadow);margin-bottom:24px}
+.form-group{margin-bottom:18px}
+.form-group label{display:block;font-weight:600;margin-bottom:8px;font-size:14px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+input[type=text]{width:100%;padding:12px 16px;border:2px solid var(--border);border-radius:10px;font-size:15px;outline:none;transition:border .2s}
+input[type=text]:focus{border-color:var(--red)}
+.style-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.style-btn{padding:12px 8px;border:2px solid var(--border);border-radius:10px;background:#fff;cursor:pointer;text-align:center;transition:all .2s;font-size:13px}
+.style-btn:hover{border-color:var(--red);background:var(--pink)}
+.style-btn.active{border-color:var(--red);background:var(--pink);color:var(--red);font-weight:600}
+.style-btn .icon{font-size:22px;display:block;margin-bottom:4px}
+.gen-btn{width:100%;padding:14px;background:var(--red);color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;transition:all .2s;letter-spacing:1px}
+.gen-btn:hover{background:#e61d3a;transform:translateY(-1px);box-shadow:0 4px 12px rgba(255,36,66,.3)}
+.gen-btn:disabled{background:#ccc;cursor:not-allowed;transform:none;box-shadow:none}
+.result-card{background:var(--card);border-radius:16px;padding:28px;box-shadow:var(--shadow);margin-bottom:24px;display:none;animation:fadeIn .3s ease}
+.result-card.show{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.result-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.result-header h3{color:var(--red);font-size:16px}
+.copy-btn,.save-btn{padding:8px 16px;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;transition:all .2s}
+.copy-btn{background:var(--pink);color:var(--red)}
+.copy-btn:hover{background:var(--red);color:#fff}
+.save-btn{background:#f0f0f0;color:#666;margin-left:8px}
+.save-btn:hover{background:#333;color:#fff}
+.result-title{font-size:20px;font-weight:700;margin-bottom:14px;line-height:1.5}
+.result-content{font-size:15px;line-height:1.8;white-space:pre-wrap;margin-bottom:16px;padding:16px;background:var(--bg);border-radius:10px}
+.result-tags{font-size:14px;color:var(--red);line-height:1.8}
+.history-card{background:var(--card);border-radius:16px;padding:28px;box-shadow:var(--shadow)}
+.history-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.history-header h3{color:var(--text);font-size:16px}
+.clear-btn{padding:6px 14px;border:1px solid var(--border);border-radius:8px;background:#fff;cursor:pointer;font-size:12px;color:var(--gray);transition:all .2s}
+.clear-btn:hover{border-color:var(--red);color:var(--red)}
+.history-list{display:flex;flex-direction:column;gap:10px}
+.history-item{padding:14px;border:1px solid var(--border);border-radius:10px;cursor:pointer;transition:all .2s;position:relative}
+.history-item:hover{border-color:var(--red);background:var(--pink)}
+.history-item .hi-title{font-weight:600;font-size:14px;margin-bottom:4px}
+.history-item .hi-meta{font-size:12px;color:var(--gray)}
+.history-item .hi-delete{position:absolute;top:10px;right:10px;width:24px;height:24px;border:none;background:transparent;cursor:pointer;font-size:16px;color:#ccc;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.history-item .hi-delete:hover{background:var(--red);color:#fff}
+.empty-state{text-align:center;padding:30px;color:var(--gray);font-size:14px}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 24px;border-radius:8px;font-size:14px;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
+.loading{display:none;text-align:center;padding:20px}
+.loading.show{display:block}
+.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--red);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 10px}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:600px){.form-row,.style-grid{grid-template-columns:1fr 1fr}.app{padding:12px}.gen-card,.result-card,.history-card{padding:18px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1>📕 小紅書筆記自動生成器</h1>
+    <p>輸入主題，一鍵生成小紅書風格筆記</p>
+  </div>
+  <div class="gen-card">
+    <div class="form-group">
+      <label>📝 主題 / 產品名稱</label>
+      <input type="text" id="topicInput" placeholder="例如：防曬乳、減脂餐、相機推薦..." autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label>🎨 筆記風格</label>
+      <div class="style-grid">
+        <button class="style-btn active" data-style="recommendation"><span class="icon">🛍️</span>好物推薦</button>
+        <button class="style-btn" data-style="sharing"><span class="icon">📖</span>經驗分享</button>
+        <button class="style-btn" data-style="review"><span class="icon">🔍</span>真實測評</button>
+        <button class="style-btn" data-style="daily"><span class="icon">🌸</span>日常記錄</button>
+      </div>
+    </div>
+    <button class="gen-btn" id="genBtn">✨ 生成筆記</button>
+  </div>
+  <div class="loading" id="loadingDiv"><div class="spinner"></div><p>正在生成中...</p></div>
+  <div class="result-card" id="resultCard">
+    <div class="result-header">
+      <h3>📄 生成結果</h3>
+      <div>
+        <button class="copy-btn" id="copyBtn">📋 複製</button>
+      </div>
+    </div>
+    <div class="result-title" id="resultTitle"></div>
+    <div class="result-content" id="resultContent"></div>
+    <div class="result-tags" id="resultTags"></div>
+  </div>
+  <div class="history-card">
+    <div class="history-header">
+      <h3>📚 歷史記錄</h3>
+      <button class="clear-btn" id="clearBtn">清空全部</button>
+    </div>
+    <div class="history-list" id="historyList"></div>
+  </div>
+</div>
+<div class="toast" id="toastMsg"></div>
+<script>
+const $ = id => document.getElementById(id);
+let currentStyle = 'recommendation';
+let currentNote = null;
+
+document.querySelectorAll('.style-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.style-btn').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    currentStyle = btn.getAttribute('data-style');
+  });
+});
+
+genBtn.addEventListener('click', async function() {
+  var topicVal = topicInput.value.trim();
+  if (!topicVal) { showToast('⚠️ 請輸入主題'); return; }
+  genBtn.disabled = true;
+  loadingDiv.classList.add('show');
+  resultCard.classList.remove('show');
+  try {
+    var res = await fetch('/api/generate', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ topic: topicVal, style: currentStyle })
+    });
+    var data = await res.json();
+    if (!data.success) throw new Error(data.error);
+    currentNote = data.note;
+    resultTitle.textContent = data.note.title;
+    resultContent.textContent = data.note.content;
+    resultTags.textContent = data.note.tags;
+    resultCard.classList.add('show');
+    resultCard.scrollIntoView({ behavior:'smooth', block:'center' });
+  } catch(e) {
+    showToast('❌ 生成失敗：' + e.message);
+  } finally {
+    genBtn.disabled = false;
+    loadingDiv.classList.remove('show');
+  }
+});
+
+copyBtn.addEventListener('click', function() {
+  if (!currentNote) return;
+  var text = currentNote.title + '\n\n' + currentNote.content + '\n\n' + currentNote.tags;
+  navigator.clipboard.writeText(text).then(function() { showToast('✅ 已複製到剪貼簿'); });
+});
+
+topicInput.addEventListener('keypress', function(e) { if (e.key === 'Enter') genBtn.click(); });
+
+async function loadHistory() {
+  try {
+    var res = await fetch('/api/history');
+    var data = await res.json();
+    renderHistory(data.notes);
+  } catch(e) {}
+}
+
+function renderHistory(notes) {
+  var list = historyList;
+  if (!notes.length) {
+    list.innerHTML = '<div class="empty-state">暫無歷史記錄，生成筆記後這裡會自動顯示</div>';
+    return;
+  }
+  var html = '';
+  for (var i = 0; i < notes.length; i++) {
+    var n = notes[i];
+    var sName = getStyleName(n.style);
+    var cDate = new Date(n.created_at).toLocaleString('zh-TW');
+    html += '<div class="history-item" onclick="showHistory(' + n.id + ')">' +
+      '<div class="hi-title">' + n.title + '</div>' +
+      '<div class="hi-meta">[' + sName + '] ' + cDate + '</div>' +
+      '<button class="hi-delete" onclick="event.stopPropagation();deleteNote(' + n.id + ')" title="刪除">×</button>' +
+      '</div>';
+  }
+  list.innerHTML = html;
+}
+
+function getStyleName(s) {
+  var map = {recommendation:'🛍️推薦',sharing:'📖分享',review:'🔍測評',daily:'🌸日常'};
+  return map[s] || s;
+}
+
+window.showHistory = async function(id) {
+  try {
+    var res = await fetch('/api/history');
+    var data = await res.json();
+    var note = null;
+    for (var i = 0; i < data.notes.length; i++) {
+      if (data.notes[i].id === id) { note = data.notes[i]; break; }
+    }
+    if (!note) return;
+    currentNote = note;
+    resultTitle.textContent = note.title;
+    resultContent.textContent = note.content;
+    resultTags.textContent = note.tags;
+    resultCard.classList.add('show');
+    resultCard.scrollIntoView({ behavior:'smooth', block:'center' });
+  } catch(e) {}
+};
+
+window.deleteNote = async function(id) {
+  try {
+    await fetch('/api/notes/' + id, {method:'DELETE'});
+    loadHistory();
+    showToast('✅ 已刪除');
+  } catch(e) {}
+};
+
+clearBtn.addEventListener('click', async function() {
+  if (!confirm('確定要清空所有歷史記錄嗎？')) return;
+  await fetch('/api/notes', {method:'DELETE'});
+  loadHistory();
+  showToast('✅ 已清空');
+});
+
+function showToast(msg) {
+  var t = toastMsg;
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 2000);
+}
+
+loadHistory();
+</script>
+</body>
+</html>
