@@ -1,19 +1,5 @@
-﻿const express = require('express');
-const cors = require('cors');
+﻿const fs = require('fs');
 const path = require('path');
-const fs = require('fs');
-
-const router = express.Router();
-router.use(cors());
-router.use(express.json());
-
-const DATA_FILE = path.join(process.cwd(), 'notes_data.json');
-function loadNotes() {
-  try { if (fs.existsSync(DATA_FILE)) return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')); } catch(e) {}
-  return [];
-}
-function saveNotes(n) { fs.writeFileSync(DATA_FILE, JSON.stringify(n, null, 2), 'utf8'); }
-let notes = loadNotes();
 
 const emojis = {
   header:['✨','🌟','💫','🔥','💖','🎀','🌸','🦋','💕','🌺'],
@@ -33,9 +19,11 @@ const tagPool = {
   daily:['#日常碎片','#生活記錄','#今天的心情','#生活美學']
 };
 
-router.post('/', (req, res) => {
-  const { topic, style } = req.body;
-  if (!topic || !style) return res.status(400).json({ error: '請提供主題和風格' });
+export async function POST(request) {
+  const { topic, style } = await request.json();
+  if (!topic || !style) {
+    return Response.json({ error: '請提供主題和風格' }, { status: 400 });
+  }
   const cfg = styleConfigs[style];
   const opening = cfg.openings[Math.floor(Math.random()*cfg.openings.length)].replace('{topic}',topic).replace('{product}',topic);
   const paras = [];
@@ -51,14 +39,5 @@ router.post('/', (req, res) => {
   const ee = emojis.end[Math.floor(Math.random()*emojis.end.length)];
   const tags = tagPool[style].sort(()=>Math.random()-0.5).slice(0,4).join(' ');
   const note = { title, content: opening+'\n\n'+paras.join('\n\n')+'\n\n'+cl+' '+ee, tags };
-  const record = { id: Date.now(), topic: topic.trim(), style, title, content: note.content, tags, created_at: new Date().toISOString() };
-  notes.unshift(record);
-  saveNotes(notes);
-  res.json({ success: true, note });
-});
-
-router.get('/history', (req, res) => { res.json({ success: true, notes: notes.slice(0,50) }); });
-router.delete('/notes/:id', (req, res) => { notes = notes.filter(n => n.id != req.params.id); saveNotes(notes); res.json({ success: true }); });
-router.delete('/notes', (req, res) => { notes = []; saveNotes(notes); res.json({ success: true }); });
-
-module.exports = router;
+  return Response.json({ success: true, note });
+}
