@@ -1,0 +1,7 @@
+﻿node
+server.js
+public/
+*.db
+*.json
+.env
+node_modules/
