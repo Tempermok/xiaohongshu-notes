@@ -1,18 +1,13 @@
-﻿{
-  "name": "xiaohongsh-note-generator",
-  "version": "1.0.0",
-  "description": "小紅書筆記自動生成器",
-  "main": "server.js",
-  "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js"
-  },
-  "keywords": ["xiaohongshu", "note", "generator"],
-  "author": "",
-  "license": "MIT",
-  "dependencies": {
-    "express": "^4.18.2",
-    "cors": "^2.8.5",
-    "dotenv": "^16.3.1"
-  }
+{
+    "version":  "1.0.0",
+    "name":  "xiaohongshu-note-generator",
+    "description":  "小紅書筆記自動生成器",
+    "scripts":  {
+                    "start":  "node api/index.js"
+                },
+    "dependencies":  {
+                         "express":  "^4.18.2",
+                         "cors":  "^2.8.5"
+                     },
+    "main":  "api/index.js"
 }
