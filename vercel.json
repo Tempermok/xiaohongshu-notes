@@ -11,8 +11,8 @@
                        "dest":  "/api/index.js"
                    },
                    {
-                       "src":  "/(.*)",
-                       "dest":  "/public/"
+                       "src":  "/",
+                       "dest":  "/public/index.html"
                    }
                ],
     "version":  2
