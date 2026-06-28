@@ -36,6 +36,7 @@ const tagPool = {
   daily:['#日常碎片','#生活記錄','#今天的心情','#平凡的一天','#生活美學','#治愈系']
 };
 
+// API routes
 app.post('/api/generate', (req, res) => {
   const { topic, style } = req.body;
   if (!topic || !style) return res.status(400).json({ error: '請提供主題和風格' });
@@ -63,5 +64,15 @@ app.post('/api/generate', (req, res) => {
 app.get('/api/history', (req, res) => { res.json({ success: true, notes: notes.slice(0,50) }); });
 app.delete('/api/notes/:id', (req, res) => { notes = notes.filter(n => n.id != req.params.id); saveNotes(notes); res.json({ success: true }); });
 app.delete('/api/notes', (req, res) => { notes = []; saveNotes(notes); res.json({ success: true }); });
+
+// Catch-all: serve index.html for SPA
+app.get('*', (req, res) => {
+  const indexPath = path.join(process.cwd(), 'public', 'index.html');
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.status(404).send('Not found');
+  }
+});
 
 module.exports = app;
