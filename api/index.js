@@ -64,7 +64,6 @@ app.get('/api/history', (req, res) => { res.json({ success: true, notes: notes.s
 app.delete('/api/notes/:id', (req, res) => { notes = notes.filter(n => n.id != req.params.id); saveNotes(notes); res.json({ success: true }); });
 app.delete('/api/notes', (req, res) => { notes = []; saveNotes(notes); res.json({ success: true }); });
 
-// Serve index.html at root
 app.get('/', (req, res) => {
   const indexPath = path.join(process.cwd(), 'index.html');
   if (fs.existsSync(indexPath)) {
