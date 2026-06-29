@@ -2,11 +2,9 @@
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
-
 const app = express();
 app.use(cors());
 app.use(express.json());
-
 const emojis = {
   header:['✨','🌟','💫','🔥','💖','🎀','🌸','🦋','💕','🌺'],
   bullet:['✅','💡','📌','👉','🔸','🔹','⭐','💎','🎯','📝'],
@@ -24,28 +22,29 @@ const tagPool = {
   review:['#真實測評','#好物測評','#拔草','#性價比'],
   daily:['#日常碎片','#生活記錄','#今天的心情','#生活美學']
 };
-
 app.post('/api/generate', (req, res) => {
-  const { topic, style } = req.body;
-  if (!topic || !style) return res.status(400).json({ error: '請提供主題和風格' });
-  const cfg = styleConfigs[style];
-  const opening = cfg.openings[Math.floor(Math.random()*cfg.openings.length)].replace('{topic}',topic).replace('{product}',topic);
-  const paras = [];
-  const details = ['質感超級好，完全不像這個價位的產品。','效果真的很明顯，用了之後變化很大。','不管是外觀還是實用性都滿分。','朋友看到都問我在哪裡買的哈哈哈。','已經推薦給身邊所有姐妹了！','性價比太高了，感覺以前花的錢都是白費。'];
-  const phrases = ['首先這個'+topic+'的品質真的很不錯，完全超出預期，','用了一段時間之後發現，','最讓我驚喜的是','而且價格也很合理，'];
-  for (let i = 0; i < 3+Math.floor(Math.random()*3); i++) {
-    paras.push(emojis.bullet[i%emojis.bullet.length]+' '+phrases[Math.floor(Math.random()*phrases.length)]+details[Math.floor(Math.random()*details.length)]);
+  try {
+    const { topic, style } = req.body;
+    if (!topic || !style) return res.status(400).json({ error: '請提供主題和風格' });
+    const cfg = styleConfigs[style];
+    const opening = cfg.openings[Math.floor(Math.random()*cfg.openings.length)].replace('{topic}',topic).replace('{product}',topic);
+    const paras = [];
+    const details = ['質感超級好，完全不像這個價位的產品。','效果真的很明顯，用了之後變化很大。','不管是外觀還是實用性都滿分。','朋友看到都問我在哪裡買的哈哈哈。','已經推薦給身邊所有姐妹了！','性價比太高了，感覺以前花的錢都是白費。'];
+    const phrases = ['首先這個'+topic+'的品質真的很不錯，完全超出預期，','用了一段時間之後發現，','最讓我驚喜的是','而且價格也很合理，'];
+    for (let i = 0; i < 3+Math.floor(Math.random()*3); i++) {
+      paras.push(emojis.bullet[i%emojis.bullet.length]+' '+phrases[Math.floor(Math.random()*phrases.length)]+details[Math.floor(Math.random()*details.length)]);
+    }
+    const te = emojis.header[Math.floor(Math.random()*emojis.header.length)];
+    const titles = [te+' '+topic+'推薦｜用過就回不去了！',te+' 求你們去買'+topic+'！！真的太好用了',te+' '+topic+'測評｜不藏了，分享給你們'];
+    const title = titles[Math.floor(Math.random()*titles.length)];
+    const cl = cfg.closings[Math.floor(Math.random()*cfg.closings.length)];
+    const ee = emojis.end[Math.floor(Math.random()*emojis.end.length)];
+    const tags = tagPool[style].sort(()=>Math.random()-0.5).slice(0,4).join(' ');
+    const note = { title, content: opening+'\n\n'+paras.join('\n\n')+'\n\n'+cl+' '+ee, tags };
+    res.json({ success: true, note });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
   }
-  const te = emojis.header[Math.floor(Math.random()*emojis.header.length)];
-  const titles = [te+' '+topic+'推薦｜用過就回不去了！',te+' 求你們去買'+topic+'！！真的太好用了',te+' '+topic+'測評｜不藏了，分享給你們'];
-  const title = titles[Math.floor(Math.random()*titles.length)];
-  const cl = cfg.closings[Math.floor(Math.random()*cfg.closings.length)];
-  const ee = emojis.end[Math.floor(Math.random()*emojis.end.length)];
-  const tags = tagPool[style].sort(()=>Math.random()-0.5).slice(0,4).join(' ');
-  const note = { title, content: opening+'\n\n'+paras.join('\n\n')+'\n\n'+cl+' '+ee, tags };
-  res.json({ success: true, note });
 });
-
-app.get('/api/history', (req, res) => { res.json({ success: true, notes: [] }); });
-
+app.get('/api/health', (req, res) => { res.json({ status: 'ok' }); });
 module.exports = app;

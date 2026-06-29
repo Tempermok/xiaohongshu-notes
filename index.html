@@ -57,13 +57,19 @@ async function generate() {
       body: JSON.stringify({topic, style})
     });
     const data = await res.json();
+    console.log('API Response:', data);
     if (data.success) {
       document.getElementById('resultTitle').textContent = data.note.title;
       document.getElementById('resultContent').textContent = data.note.content;
       document.getElementById('resultTags').textContent = data.note.tags;
       document.getElementById('result').style.display = 'block';
+    } else {
+      alert('錯誤: ' + (data.error || '未知錯誤'));
     }
-  } catch(e) { alert('生成失敗，請重試'); }
+  } catch(e) {
+    console.error('Fetch error:', e);
+    alert('生成失敗: ' + e.message);
+  }
   btn.disabled = false;
   btn.textContent = '生成筆記';
 }
