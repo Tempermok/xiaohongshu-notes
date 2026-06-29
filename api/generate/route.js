@@ -41,3 +41,4 @@ export async function POST(request) {
   const note = { title, content: opening+'\n\n'+paras.join('\n\n')+'\n\n'+cl+' '+ee, tags };
   return Response.json({ success: true, note });
 }
+// Updated for Vercel
