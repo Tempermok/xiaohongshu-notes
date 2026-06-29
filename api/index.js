@@ -1,5 +1,11 @@
-﻿const fs = require('fs');
+﻿const express = require('express');
+const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
+
+const app = express();
+app.use(cors());
+app.use(express.json());
 
 const emojis = {
   header:['✨','🌟','💫','🔥','💖','🎀','🌸','🦋','💕','🌺'],
@@ -19,11 +25,9 @@ const tagPool = {
   daily:['#日常碎片','#生活記錄','#今天的心情','#生活美學']
 };
 
-export async function POST(request) {
-  const { topic, style } = await request.json();
-  if (!topic || !style) {
-    return Response.json({ error: '請提供主題和風格' }, { status: 400 });
-  }
+app.post('/api/generate', (req, res) => {
+  const { topic, style } = req.body;
+  if (!topic || !style) return res.status(400).json({ error: '請提供主題和風格' });
   const cfg = styleConfigs[style];
   const opening = cfg.openings[Math.floor(Math.random()*cfg.openings.length)].replace('{topic}',topic).replace('{product}',topic);
   const paras = [];
@@ -39,7 +43,9 @@ export async function POST(request) {
   const ee = emojis.end[Math.floor(Math.random()*emojis.end.length)];
   const tags = tagPool[style].sort(()=>Math.random()-0.5).slice(0,4).join(' ');
   const note = { title, content: opening+'\n\n'+paras.join('\n\n')+'\n\n'+cl+' '+ee, tags };
-  return Response.json({ success: true, note });
-}
-// Updated for Vercel
-// Updated for Vercel
+  res.json({ success: true, note });
+});
+
+app.get('/api/history', (req, res) => { res.json({ success: true, notes: [] }); });
+
+module.exports = app;
