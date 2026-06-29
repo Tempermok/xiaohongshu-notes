@@ -32,9 +32,9 @@ const tagPool = {
   daily:['#日常碎片','#生活記錄','#今天的心情','#生活美學']
 };
 
-export async function POST(request) {
-  const { topic, style } = await request.json();
-  if (!topic || !style) return new Response(JSON.stringify({error:'請提供主題和風格'}), {status:400});
+module.exports = async (req, res) => {
+  const { topic, style } = req.body;
+  if (!topic || !style) return res.status(400).json({ error: '請提供主題和風格' });
   const cfg = styleConfigs[style];
   const opening = cfg.openings[Math.floor(Math.random()*cfg.openings.length)].replace('{topic}',topic).replace('{product}',topic);
   const paras = [];
@@ -53,17 +53,5 @@ export async function POST(request) {
   const record = { id: Date.now(), topic: topic.trim(), style, title, content: note.content, tags, created_at: new Date().toISOString() };
   notes.unshift(record);
   saveNotes(notes);
-  return new Response(JSON.stringify({success:true,note}), {status:200});
-}
-
-export async function GET(request) {
-  return new Response(JSON.stringify({success:true,notes:notes.slice(0,50)}), {status:200});
-}
-
-export async function DELETE(request) {
-  const url = new URL(request.url);
-  const id = url.pathname.split('/').pop();
-  if (id === 'all') { notes = []; saveNotes(notes); return new Response(JSON.stringify({success:true}), {status:200}); }
-  if (id) { notes = notes.filter(n => n.id != id); saveNotes(notes); return new Response(JSON.stringify({success:true}), {status:200}); }
-  return new Response(JSON.stringify({success:true,notes:notes.slice(0,50)}), {status:200});
-}
+  res.json({ success: true, note });
+};
