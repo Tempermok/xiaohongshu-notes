@@ -42,3 +42,4 @@ export async function POST(request) {
   return Response.json({ success: true, note });
 }
 // Updated for Vercel
+// Updated for Vercel
